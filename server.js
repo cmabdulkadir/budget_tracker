@@ -1,25 +1,33 @@
+const express = require("express");
+const logger = require("morgan");
 const mongoose = require("mongoose");
+const compression = require("compression");
 
-const Schema = mongoose.Schema;
+const PORT = process.env.PORT || 3000;
 
-const transactionSchema = new Schema(
+const app = express();
+
+app.use(logger("dev"));
+
+app.use(compression());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+app.use(express.static("public"));
+
+mongoose.connect(
+  process.env.MONGODB_URI || 'mongodb://localhost/budget',
   {
-    name: {
-      type: String,
-      trim: true,
-      required: "Enter a name for transaction"
-    },
-    value: {
-      type: Number,
-      required: "Enter an amount"
-    },
-    date: {
-      type: Date,
-      default: Date.now
-    }
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+    useFindAndModify: false
   }
 );
 
-const Transaction = mongoose.model("Transaction", transactionSchema);
+// routes
+app.use(require("./routes/api"));
 
-module.exports = Transaction;
+app.listen(PORT, () => {
+  console.log(`App running on port ${PORT}!`);
+});
